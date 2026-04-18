@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Second Brain">
+<meta name="theme-color" content="#13141a">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%2313141a'/%3E%3Ctext x='90' y='115' text-anchor='middle' font-size='90' fill='%23d4b684' font-family='serif'%3E✦%3C/text%3E%3C/svg%3E">
+<title>Second Brain</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+
+:root {
+–bg: #13141a;
+–surface: linear-gradient(145deg, #1c1e28 0%, #161820 100%);
+–surface-flat: #1a1c25;
+–surface2: linear-gradient(145deg, #232532 0%, #1b1d27 100%);
+–surface3-flat: #252735;
+–border: rgba(255,255,255,0.06);
+–border2: rgba(255,255,255,0.1);
+–border-light: rgba(255,255,255,0.14);
+
+–ink: #f0eee8;
+–ink2: #a8a6a0;
+–ink3: #5a5960;
+
+–accent: #d4b684;
+–accent2: #e8d2a4;
+–accent-glow: rgba(212,182,132,0.15);
+–accent-dim: rgba(212,182,132,0.08);
+–accent-border: rgba(212,182,132,0.22);
+
+–rose: #c88b8b;
+–sage: #8fa888;
+–slate: #8fa0b8;
+
+–r: 22px;
+–r-sm: 14px;
+
+–safe-top: env(safe-area-inset-top, 0px);
+–safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html, body {
+height: 100%;
+overflow: hidden;
+overscroll-behavior: none;
+}
+
+body {
+background: var(–bg);
+font-family: ‘Inter’, sans-serif;
+color: var(–ink);
+position: fixed;
+inset: 0;
+user-select: none;
+-webkit-user-select: none;
+}
+
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background:
+radial-gradient(ellipse 50% 40% at 20% 20%, rgba(212,182,132,0.04), transparent 70%),
+radial-gradient(ellipse 60% 50% at 80% 80%, rgba(143,160,184,0.03), transparent 70%);
+pointer-events: none;
+z-index: 0;
+}
+
+.app {
+position: relative;
+z-index: 1;
+height: 100%;
+display: flex;
+flex-direction: column;
+}
+
+/* Noise overlay */
+.app::after {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image: url(“data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/></filter><rect width='100' height='100' filter='url(%23n)'/></svg>”);
+pointer-events: none;
+z-index: 100;
+opacity: 0.4;
+mix-blend-mode: overlay;
+}
+
+.view {
+position: absolute;
+inset: 0;
+bottom: calc(83px + var(–safe-bottom));
+display: none;
+flex-direction: column;
+overflow: hidden;
+padding-top: var(–safe-top);
+}
+.view.active { display: flex; animation: viewIn 0.3s ease; }
+
+@keyframes viewIn {
+from { opacity: 0; transform: translateX(12px); }
+to { opacity: 1; transform: translateX(0); }
+}
+
+.scroll-content {
+flex: 1;
+overflow-y: auto;
+overflow-x: hidden;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+padding-bottom: 20px;
+}
+.scroll-content::-webkit-scrollbar { display: none; }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+position: fixed;
+bottom: 0; left: 0; right: 0;
+height: calc(83px + var(–safe-bottom));
+padding-bottom: var(–safe-bottom);
+background: linear-gradient(180deg, rgba(20,22,30,0.75) 0%, rgba(14,15,20,0.95) 100%);
+border-top: 1px solid var(–border2);
+display: flex;
+align-items: center;
+justify-content: space-around;
+padding-left: 8px; padding-right: 8px;
+z-index: 50;
+backdrop-filter: blur(24px) saturate(180%);
+-webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+.bottom-nav::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0; height: 1px;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+}
+
+.nav-item {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 4px;
+cursor: pointer;
+padding: 10px 14px;
+border-radius: var(–r-sm);
+transition: transform 0.15s;
+position: relative;
+min-width: 60px;
+}
+.nav-item:active { transform: scale(0.92); }
+.nav-item .nav-icon { font-size: 22px; line-height: 1; opacity: 0.55; transition: opacity 0.2s; }
+.nav-item .nav-label { font-size: 10px; color: var(–ink3); font-weight: 500; transition: color 0.2s; }
+.nav-item.active .nav-icon { opacity: 1; }
+.nav-item.active .nav-label { color: var(–accent); }
+.nav-item.active::after {
+content: ‘’;
+position: absolute;
+top: 3px;
+left: 50%;
+transform: translateX(-50%);
+width: 22px; height: 2px;
+background: linear-gradient(90deg, transparent, var(–accent), transparent);
+border-radius: 2px;
+}
+
+/* ===== FAB ===== */
+.fab {
+position: fixed;
+bottom: calc(96px + var(–safe-bottom));
+right: 22px;
+width: 56px; height: 56px;
+background: linear-gradient(145deg, var(–accent2) 0%, var(–accent) 50%, #b89968 100%);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 28px;
+font-weight: 300;
+color: #1a1410;
+box-shadow:
+0 2px 0 rgba(255,255,255,0.25) inset,
+0 -2px 0 rgba(0,0,0,0.2) inset,
+0 10px 30px rgba(212,182,132,0.25),
+0 4px 12px rgba(0,0,0,0.3);
+cursor: pointer;
+z-index: 40;
+transition: transform 0.15s;
+border: none;
+}
+.fab:active { transform: scale(0.92); }
+
+/* ===== HEADER ===== */
+.page-header { padding: 20px 22px 16px; }
+.page-title {
+font-family: ‘Fraunces’, serif;
+font-weight: 400;
+font-size: 32px;
+color: var(–ink);
+letter-spacing: -0.6px;
+margin-bottom: 6px;
+}
+.page-subtitle {
+font-size: 12px; color: var(–ink3);
+letter-spacing: 0.2px;
+}
+
+.greeting {
+font-family: ‘Fraunces’, serif;
+font-weight: 400;
+font-size: 30px;
+color: var(–ink);
+line-height: 1.15;
+margin-bottom: 6px;
+letter-spacing: -0.5px;
+}
+.greeting em {
+font-style: italic;
+background: linear-gradient(135deg, var(–accent2), var(–accent));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+}
+
+.section-title {
+padding: 0 22px;
+font-size: 10px;
+color: var(–ink3);
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 1.5px;
+margin-bottom: 12px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.section-title span.link {
+font-size: 11px;
+color: var(–accent);
+text-transform: none;
+letter-spacing: 0.2px;
+font-weight: 500;
+cursor: pointer;
+opacity: 0.85;
+}
+
+/* ===== MOOD STRIP ===== */
+.mood-strip {
+margin: 0 22px 24px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r);
+padding: 16px 18px;
+position: relative;
+overflow: hidden;
+box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset;
+}
+.mood-strip::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0; height: 1px;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+}
+.mood-strip-label {
+font-size: 10px;
+color: var(–ink3);
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 1.5px;
+margin-bottom: 12px;
+}
+.mood-emojis { display: flex; justify-content: space-between; }
+.mood-btn {
+width: 46px; height: 46px;
+border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-size: 22px;
+cursor: pointer;
+transition: all 0.2s;
+position: relative;
+background: transparent;
+border: none;
+}
+.mood-btn.selected {
+background: radial-gradient(circle, var(–accent-glow) 0%, transparent 70%);
+transform: scale(1.15);
+}
+.mood-btn.selected::after {
+content: ‘’;
+position: absolute; inset: -2px;
+border-radius: 50%;
+border: 1px solid var(–accent-border);
+}
+
+/* ===== CAPTURE BUTTONS ===== */
+.capture-row {
+display: flex;
+gap: 8px;
+padding: 0 22px;
+margin-bottom: 24px;
+overflow-x: auto;
+scrollbar-width: none;
+}
+.capture-row::-webkit-scrollbar { display: none; }
+
+.capture-btn {
+flex-shrink: 0;
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 10px 14px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r-sm);
+cursor: pointer;
+transition: all 0.2s;
+box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+color: var(–ink);
+}
+.capture-btn:active { transform: scale(0.96); border-color: var(–accent-border); }
+.capture-btn-label { font-size: 13px; font-weight: 500; white-space: nowrap; letter-spacing: -0.1px; }
+
+/* ===== SEARCH BAR ===== */
+.search-bar {
+margin: 0 22px 16px;
+display: flex;
+align-items: center;
+gap: 10px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r-sm);
+padding: 12px 16px;
+transition: border-color 0.2s;
+box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+}
+.search-bar:focus-within { border-color: var(–accent-border); }
+.search-bar input {
+border: none; background: transparent;
+font-family: ‘Inter’, sans-serif;
+font-size: 14px; color: var(–ink);
+outline: none; width: 100%;
+letter-spacing: -0.1px;
+}
+.search-bar input::placeholder { color: var(–ink3); }
+
+/* ===== NOTE CARDS ===== */
+.note-list {
+padding: 0 22px;
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.note-row {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r);
+padding: 16px;
+cursor: pointer;
+transition: all 0.2s;
+display: flex;
+gap: 14px;
+position: relative;
+box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+animation: cardIn 0.35s ease;
+}
+@keyframes cardIn {
+from { opacity: 0; transform: translateY(6px); }
+to { opacity: 1; transform: translateY(0); }
+}
+.note-row:active { transform: scale(0.985); border-color: var(–border-light); }
+
+.note-row-type {
+width: 40px; height: 40px;
+border-radius: 12px;
+display: flex; align-items: center; justify-content: center;
+font-size: 18px;
+flex-shrink: 0;
+border: 1px solid var(–border);
+background: var(–accent-dim);
+}
+.note-row-body { flex: 1; min-width: 0; }
+.note-row-title {
+font-family: ‘Fraunces’, serif;
+font-weight: 500;
+font-size: 16px; color: var(–ink);
+margin-bottom: 4px;
+letter-spacing: -0.3px;
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.note-row-preview {
+font-size: 12px; color: var(–ink3); line-height: 1.5;
+display: -webkit-box;
+-webkit-line-clamp: 2;
+-webkit-box-orient: vertical;
+overflow: hidden;
+margin-bottom: 8px;
+}
+.note-row-date { font-size: 10px; color: var(–ink3); letter-spacing: 0.2px; }
+
+.empty-state {
+padding: 60px 30px;
+text-align: center;
+color: var(–ink3);
+}
+.empty-state-icon {
+font-size: 40px;
+margin-bottom: 16px;
+opacity: 0.5;
+}
+.empty-state-title {
+font-family: ‘Fraunces’, serif;
+font-size: 18px;
+color: var(–ink2);
+margin-bottom: 8px;
+}
+.empty-state-text {
+font-size: 13px;
+line-height: 1.6;
+}
+
+/* ===== TASKS ===== */
+.task-list {
+padding: 0 22px;
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+.task-item {
+display: flex;
+align-items: center;
+gap: 14px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r-sm);
+padding: 13px 16px;
+cursor: pointer;
+transition: all 0.2s;
+box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+animation: cardIn 0.3s ease;
+}
+.task-item:active { transform: scale(0.985); }
+
+.task-check {
+width: 22px; height: 22px;
+border: 1.5px solid var(–border-light);
+border-radius: 50%;
+flex-shrink: 0;
+display: flex; align-items: center; justify-content: center;
+transition: all 0.2s;
+font-size: 12px;
+background: transparent;
+}
+.task-check.done {
+background: linear-gradient(145deg, var(–accent2), var(–accent));
+border-color: var(–accent);
+color: #1a1410;
+box-shadow: 0 0 12px var(–accent-glow);
+}
+.task-text {
+font-size: 14px;
+color: var(–ink);
+flex: 1;
+letter-spacing: -0.1px;
+word-break: break-word;
+}
+.task-text.done {
+text-decoration: line-through;
+color: var(–ink3);
+}
+.task-link {
+font-size: 10px;
+color: var(–ink2);
+background: var(–surface3-flat);
+padding: 3px 8px;
+border-radius: 6px;
+border: 1px solid var(–border);
+white-space: nowrap;
+max-width: 90px;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.task-delete {
+color: var(–ink3);
+font-size: 18px;
+padding: 4px 8px;
+background: none;
+border: none;
+cursor: pointer;
+}
+.task-delete:active { color: var(–rose); }
+
+/* ===== MOOD CHART ===== */
+.mood-week {
+margin: 0 22px 22px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r); padding: 18px;
+position: relative; overflow: hidden;
+box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset;
+}
+.mood-week::before {
+content: ‘’;
+position: absolute; top: 0; left: 0; right: 0; height: 1px;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+}
+.mood-week-title {
+font-size: 10px; color: var(–ink3); font-weight: 600;
+text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;
+}
+.mood-bars {
+display: flex; gap: 6px;
+align-items: flex-end; height: 64px;
+}
+.mood-bar-col {
+flex: 1; display: flex; flex-direction: column;
+align-items: center; gap: 8px; height: 100%;
+justify-content: flex-end;
+}
+.mood-bar {
+width: 100%;
+min-height: 4px;
+border-radius: 6px 6px 2px 2px;
+position: relative; overflow: hidden;
+transition: height 0.5s ease;
+}
+.mood-bar::after {
+content: ‘’;
+position: absolute; inset: 0;
+background: linear-gradient(180deg, rgba(255,255,255,0.15), transparent 50%);
+}
+.mood-bar-day { font-size: 10px; color: var(–ink3); font-weight: 500; letter-spacing: 0.5px; }
+
+/* ===== JOURNAL ENTRIES ===== */
+.journal-entry-card {
+margin: 0 22px 12px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r); overflow: hidden;
+position: relative;
+box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+animation: cardIn 0.3s ease;
+}
+.journal-entry-card::before {
+content: ‘’;
+position: absolute; top: 0; left: 0; right: 0; height: 1px;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+.journal-entry-header {
+padding: 14px 18px;
+border-bottom: 1px solid var(–border);
+display: flex; align-items: center; justify-content: space-between;
+}
+.journal-entry-date { font-size: 13px; font-weight: 500; color: var(–ink); letter-spacing: -0.1px; }
+.journal-entry-time { font-size: 11px; color: var(–ink3); margin-top: 2px; letter-spacing: 0.2px; }
+.journal-entry-mood { font-size: 22px; }
+.journal-entry-body {
+padding: 16px 18px;
+font-size: 14px; color: var(–ink2); line-height: 1.75;
+letter-spacing: -0.1px;
+font-weight: 300;
+white-space: pre-wrap;
+word-break: break-word;
+}
+
+/* ===== MODAL / SHEET ===== */
+.overlay {
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.6);
+backdrop-filter: blur(6px);
+-webkit-backdrop-filter: blur(6px);
+z-index: 60;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s;
+}
+.overlay.show { opacity: 1; pointer-events: all; }
+
+.sheet {
+position: fixed;
+bottom: 0; left: 0; right: 0;
+background: linear-gradient(180deg, #1d1f29 0%, #15161d 100%);
+border-radius: 26px 26px 0 0;
+padding: 14px 0 calc(32px + var(–safe-bottom));
+z-index: 70;
+transform: translateY(100%);
+transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+box-shadow:
+0 -1px 0 rgba(255,255,255,0.08) inset,
+0 -20px 60px rgba(0,0,0,0.7);
+max-height: 90vh;
+display: flex;
+flex-direction: column;
+}
+.sheet::before {
+content: ‘’;
+position: absolute; top: 0; left: 20%; right: 20%; height: 1px;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+}
+.sheet.open { transform: translateY(0); }
+
+.sheet-handle {
+width: 40px; height: 4px;
+background: var(–border-light);
+border-radius: 2px;
+margin: 0 auto 18px;
+flex-shrink: 0;
+}
+
+.sheet-header {
+padding: 0 22px 18px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+flex-shrink: 0;
+}
+.sheet-title {
+font-family: ‘Fraunces’, serif;
+font-weight: 500;
+font-size: 22px; color: var(–ink);
+letter-spacing: -0.4px;
+}
+.sheet-close, .sheet-save {
+background: none;
+border: none;
+color: var(–accent);
+font-size: 15px;
+font-family: ‘Inter’, sans-serif;
+font-weight: 500;
+cursor: pointer;
+padding: 4px 8px;
+}
+.sheet-close { color: var(–ink3); }
+
+.sheet-body {
+flex: 1;
+overflow-y: auto;
+padding: 0 22px;
+scrollbar-width: none;
+}
+.sheet-body::-webkit-scrollbar { display: none; }
+
+.sheet-options {
+display: grid; grid-template-columns: 1fr 1fr;
+gap: 10px;
+}
+.sheet-option {
+background: var(–surface2);
+border: 1px solid var(–border2);
+border-radius: var(–r); padding: 18px 16px;
+cursor: pointer;
+transition: all 0.2s;
+display: flex; flex-direction: column; gap: 8px;
+position: relative; overflow: hidden;
+box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset;
+color: var(–ink);
+text-align: left;
+font-family: inherit;
+}
+.sheet-option::before {
+content: ‘’;
+position: absolute; top: 0; left: 0; right: 0; height: 1px;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+.sheet-option:active { transform: scale(0.97); border-color: var(–accent-border); }
+.sheet-option-icon { font-size: 24px; }
+.sheet-option-label { font-size: 13px; font-weight: 600; letter-spacing: -0.1px; }
+.sheet-option-sub { font-size: 11px; color: var(–ink3); line-height: 1.4; }
+
+/* Note editor inputs */
+.input-label {
+font-size: 10px;
+color: var(–ink3);
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 1.5px;
+margin-bottom: 8px;
+display: block;
+}
+
+.note-input-title {
+width: 100%;
+background: transparent;
+border: none;
+border-bottom: 1px solid var(–border);
+padding: 12px 0;
+font-family: ‘Fraunces’, serif;
+font-size: 22px;
+font-weight: 500;
+color: var(–ink);
+outline: none;
+margin-bottom: 16px;
+letter-spacing: -0.4px;
+}
+.note-input-title::placeholder { color: var(–ink3); }
+
+.note-input-body {
+width: 100%;
+background: transparent;
+border: none;
+padding: 8px 0;
+font-family: ‘Inter’, sans-serif;
+font-size: 15px;
+color: var(–ink);
+outline: none;
+resize: none;
+min-height: 180px;
+line-height: 1.6;
+letter-spacing: -0.1px;
+font-weight: 300;
+}
+.note-input-body::placeholder { color: var(–ink3); }
+
+.task-input {
+width: 100%;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r-sm);
+padding: 14px 16px;
+font-family: ‘Inter’, sans-serif;
+font-size: 15px;
+color: var(–ink);
+outline: none;
+margin-bottom: 12px;
+box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+}
+
+.link-select {
+width: 100%;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r-sm);
+padding: 14px 16px;
+font-family: ‘Inter’, sans-serif;
+font-size: 14px;
+color: var(–ink);
+outline: none;
+appearance: none;
+-webkit-appearance: none;
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%23a8a6a0’ stroke-width=‘1.5’ fill=‘none’/%3E%3C/svg%3E”);
+background-repeat: no-repeat;
+background-position: right 16px center;
+padding-right: 40px;
+}
+
+/* Voice recording */
+.voice-recorder {
+text-align: center;
+padding: 30px 20px;
+}
+.record-btn {
+width: 100px; height: 100px;
+border-radius: 50%;
+background: linear-gradient(145deg, var(–accent2), var(–accent));
+border: none;
+display: flex;
+align-items: center;
+justify-content: center;
+margin: 0 auto 20px;
+cursor: pointer;
+transition: all 0.2s;
+box-shadow:
+0 2px 0 rgba(255,255,255,0.25) inset,
+0 -2px 0 rgba(0,0,0,0.2) inset,
+0 8px 30px var(–accent-glow);
+}
+.record-btn:active { transform: scale(0.95); }
+.record-btn.recording {
+background: linear-gradient(145deg, #e89a9a, var(–rose));
+animation: pulse 1.5s ease-in-out infinite;
+box-shadow:
+0 2px 0 rgba(255,255,255,0.25) inset,
+0 -2px 0 rgba(0,0,0,0.2) inset,
+0 8px 30px rgba(200,139,139,0.4);
+}
+@keyframes pulse {
+0%, 100% { transform: scale(1); }
+50% { transform: scale(1.05); }
+}
+.record-icon { font-size: 40px; color: #1a1410; }
+.recorder-status {
+font-family: ‘Fraunces’, serif;
+font-size: 18px;
+color: var(–ink);
+margin-bottom: 6px;
+letter-spacing: -0.2px;
+}
+.recorder-hint {
+font-size: 12px;
+color: var(–ink3);
+margin-bottom: 20px;
+}
+.recorder-time {
+font-family: ‘Fraunces’, serif;
+font-size: 32px;
+color: var(–accent);
+margin-bottom: 8px;
+font-variant-numeric: tabular-nums;
+}
+
+.transcript-box {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r);
+padding: 16px;
+min-height: 120px;
+margin-top: 16px;
+text-align: left;
+font-size: 14px;
+color: var(–ink2);
+line-height: 1.6;
+box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+}
+.transcript-box.empty { color: var(–ink3); font-style: italic; }
+
+/* Detail view */
+.detail-title {
+font-family: ‘Fraunces’, serif;
+font-size: 26px;
+color: var(–ink);
+margin-bottom: 8px;
+letter-spacing: -0.5px;
+font-weight: 500;
+}
+.detail-meta {
+font-size: 11px;
+color: var(–ink3);
+margin-bottom: 20px;
+letter-spacing: 0.3px;
+}
+.detail-body {
+font-size: 15px;
+color: var(–ink2);
+line-height: 1.7;
+letter-spacing: -0.1px;
+font-weight: 300;
+white-space: pre-wrap;
+word-break: break-word;
+}
+
+.detail-actions {
+display: flex;
+gap: 10px;
+margin-top: 24px;
+}
+.btn-secondary {
+flex: 1;
+padding: 12px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–r-sm);
+color: var(–ink);
+font-size: 14px;
+font-weight: 500;
+cursor: pointer;
+font-family: inherit;
+}
+.btn-secondary.danger { color: var(–rose); }
+.btn-secondary:active { background: var(–surface3-flat); }
+
+/* Install banner */
+.install-banner {
+position: fixed;
+bottom: calc(100px + var(–safe-bottom));
+left: 14px; right: 14px;
+background: linear-gradient(145deg, #232532, #1b1d27);
+border: 1px solid var(–accent-border);
+border-radius: var(–r);
+padding: 14px 16px;
+display: flex;
+align-items: center;
+gap: 12px;
+z-index: 45;
+box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+transform: translateY(120%);
+transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.install-banner.show { transform: translateY(0); }
+.install-banner-icon {
+font-size: 22px;
+color: var(–accent);
+}
+.install-banner-text {
+flex: 1;
+font-size: 12px;
+color: var(–ink2);
+line-height: 1.4;
+}
+.install-banner-text strong {
+color: var(–ink);
+font-weight: 600;
+display: block;
+margin-bottom: 2px;
+font-size: 13px;
+}
+.install-banner-close {
+background: none;
+border: none;
+color: var(–ink3);
+font-size: 18px;
+cursor: pointer;
+padding: 4px;
+}
+
+.toast {
+position: fixed;
+bottom: calc(100px + var(–safe-bottom));
+left: 50%;
+transform: translateX(-50%) translateY(60px);
+background: linear-gradient(145deg, #232532, #1b1d27);
+border: 1px solid var(–accent-border);
+border-radius: 100px;
+padding: 10px 20px;
+color: var(–accent);
+font-size: 13px;
+font-weight: 500;
+z-index: 80;
+opacity: 0;
+transition: all 0.3s;
+box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+white-space: nowrap;
+}
+.toast.show {
+transform: translateX(-50%) translateY(0);
+opacity: 1;
+}
+
+/* Search highlight */
+mark {
+background: var(–accent-dim);
+color: var(–accent);
+padding: 1px 3px;
+border-radius: 3px;
+}
+
+/* Safe scrolling areas on iPhone */
+@supports (padding: max(0px)) {
+.bottom-nav { padding-bottom: max(var(–safe-bottom), 0px); }
+}
+</style>
+
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ========== HOME ========== -->
+
+  <div class="view active" id="view-home">
+    <div class="scroll-content">
+      <div class="page-header" style="padding-top: 24px">
+        <div class="greeting" id="greeting">Buongiorno,<br><em>come stai oggi?</em></div>
+        <div class="page-subtitle" id="home-stats">0 note · 0 task aperti</div>
+      </div>
+
+```
+  <div class="mood-strip">
+    <div class="mood-strip-label">Mood di oggi</div>
+    <div class="mood-emojis" id="mood-emojis">
+      <button class="mood-btn" data-mood="1">😔</button>
+      <button class="mood-btn" data-mood="2">😐</button>
+      <button class="mood-btn" data-mood="3">🙂</button>
+      <button class="mood-btn" data-mood="4">😊</button>
+      <button class="mood-btn" data-mood="5">🤩</button>
+    </div>
+  </div>
+
+  <div class="section-title">Cattura rapida</div>
+  <div class="capture-row">
+    <button class="capture-btn" onclick="openNoteEditor()">✍️<span class="capture-btn-label">Nota</span></button>
+    <button class="capture-btn" onclick="openVoiceRecorder()">🎙️<span class="capture-btn-label">Voce</span></button>
+    <button class="capture-btn" onclick="openJournalEditor()">📔<span class="capture-btn-label">Journal</span></button>
+    <button class="capture-btn" onclick="openTaskEditor()">☑️<span class="capture-btn-label">Task</span></button>
+  </div>
+
+  <div class="section-title">
+    Recenti
+    <span class="link" onclick="switchView('notes')">Vedi tutte</span>
+  </div>
+  <div id="home-recent-notes" style="padding: 0 22px; margin-bottom: 24px;"></div>
+
+  <div class="section-title">Task aperti</div>
+  <div id="home-tasks" style="margin-bottom: 20px;"></div>
+</div>
+```
+
+  </div>
+
+  <!-- ========== NOTES ========== -->
+
+  <div class="view" id="view-notes">
+    <div class="page-header">
+      <div class="page-title">Le tue Note</div>
+      <div class="page-subtitle" id="notes-count">0 note salvate</div>
+    </div>
+    <div class="search-bar">
+      <span style="color: var(--ink3)">🔍</span>
+      <input type="text" id="search-input" placeholder="Cerca nelle tue note…">
+    </div>
+    <div class="scroll-content">
+      <div id="notes-list" class="note-list"></div>
+    </div>
+    <button class="fab" onclick="openNoteEditor()">+</button>
+  </div>
+
+  <!-- ========== JOURNAL ========== -->
+
+  <div class="view" id="view-journal">
+    <div class="page-header">
+      <div class="page-title">Journal</div>
+      <div class="page-subtitle" id="journal-count">0 entry · inizia oggi</div>
+    </div>
+    <div class="scroll-content">
+      <div class="mood-week">
+        <div class="mood-week-title">Mood settimana</div>
+        <div class="mood-bars" id="mood-bars"></div>
+      </div>
+
+```
+  <div class="section-title">Le tue entry</div>
+  <div id="journal-list"></div>
+</div>
+<button class="fab" style="font-size:22px" onclick="openJournalEditor()">✍</button>
+```
+
+  </div>
+
+  <!-- ========== TASKS ========== -->
+
+  <div class="view" id="view-tasks">
+    <div class="page-header">
+      <div class="page-title">Task</div>
+      <div class="page-subtitle" id="tasks-count">0 task totali</div>
+    </div>
+    <div class="scroll-content">
+      <div id="tasks-list" class="task-list"></div>
+    </div>
+    <button class="fab" onclick="openTaskEditor()">+</button>
+  </div>
+
+  <!-- ========== VOICE MEMOS ========== -->
+
+  <div class="view" id="view-voice">
+    <div class="page-header">
+      <div class="page-title">Voice Memos</div>
+      <div class="page-subtitle" id="voice-count">0 memo salvati</div>
+    </div>
+    <div class="scroll-content">
+      <div id="voice-list" class="note-list"></div>
+    </div>
+    <button class="fab" style="font-size:24px" onclick="openVoiceRecorder()">🎙</button>
+  </div>
+
+  <!-- ========== BOTTOM NAV ========== -->
+
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-view="home" onclick="switchView('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item" data-view="notes" onclick="switchView('notes')">
+      <span class="nav-icon">📝</span>
+      <span class="nav-label">Note</span>
+    </div>
+    <div class="nav-item" data-view="voice" onclick="switchView('voice')">
+      <span class="nav-icon">🎙️</span>
+      <span class="nav-label">Voce</span>
+    </div>
+    <div class="nav-item" data-view="journal" onclick="switchView('journal')">
+      <span class="nav-icon">📔</span>
+      <span class="nav-label">Journal</span>
+    </div>
+    <div class="nav-item" data-view="tasks" onclick="switchView('tasks')">
+      <span class="nav-icon">☑️</span>
+      <span class="nav-label">Task</span>
+    </div>
+  </nav>
+
+  <!-- ========== OVERLAY ========== -->
+
+  <div class="overlay" id="overlay" onclick="closeAllSheets()"></div>
+
+  <!-- ========== NOTE EDITOR SHEET ========== -->
+
+  <div class="sheet" id="sheet-note">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <button class="sheet-close" onclick="closeAllSheets()">Annulla</button>
+      <div class="sheet-title">Nuova nota</div>
+      <button class="sheet-save" onclick="saveNote()">Salva</button>
+    </div>
+    <div class="sheet-body">
+      <input type="text" class="note-input-title" id="note-title-input" placeholder="Titolo…">
+      <textarea class="note-input-body" id="note-body-input" placeholder="Scrivi qui…"></textarea>
+    </div>
+  </div>
+
+  <!-- ========== VOICE RECORDER SHEET ========== -->
+
+  <div class="sheet" id="sheet-voice">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <button class="sheet-close" onclick="cancelVoiceRecording()">Annulla</button>
+      <div class="sheet-title">Voice Memo</div>
+      <button class="sheet-save" id="voice-save-btn" onclick="saveVoiceMemo()" style="opacity:0.4">Salva</button>
+    </div>
+    <div class="sheet-body">
+      <div class="voice-recorder">
+        <div class="recorder-time" id="recorder-time">00:00</div>
+        <button class="record-btn" id="record-btn" onclick="toggleRecording()">
+          <span class="record-icon" id="record-icon">🎙️</span>
+        </button>
+        <div class="recorder-status" id="recorder-status">Tocca per iniziare</div>
+        <div class="recorder-hint" id="recorder-hint">La trascrizione avviene in tempo reale</div>
+        <div class="transcript-box empty" id="transcript-box">La trascrizione apparirà qui…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== JOURNAL EDITOR SHEET ========== -->
+
+  <div class="sheet" id="sheet-journal">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <button class="sheet-close" onclick="closeAllSheets()">Annulla</button>
+      <div class="sheet-title">Journal di oggi</div>
+      <button class="sheet-save" onclick="saveJournal()">Salva</button>
+    </div>
+    <div class="sheet-body">
+      <span class="input-label">Mood</span>
+      <div class="mood-emojis" id="journal-mood-emojis" style="margin-bottom: 20px;">
+        <button class="mood-btn" data-mood="1">😔</button>
+        <button class="mood-btn" data-mood="2">😐</button>
+        <button class="mood-btn" data-mood="3">🙂</button>
+        <button class="mood-btn" data-mood="4">😊</button>
+        <button class="mood-btn" data-mood="5">🤩</button>
+      </div>
+      <span class="input-label">Cosa è successo oggi?</span>
+      <textarea class="note-input-body" id="journal-body-input" placeholder="Come ti senti? Cosa è successo? Cosa vuoi ricordare…" style="min-height: 200px;"></textarea>
+    </div>
+  </div>
+
+  <!-- ========== TASK EDITOR SHEET ========== -->
+
+  <div class="sheet" id="sheet-task">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <button class="sheet-close" onclick="closeAllSheets()">Annulla</button>
+      <div class="sheet-title">Nuovo task</div>
+      <button class="sheet-save" onclick="saveTask()">Salva</button>
+    </div>
+    <div class="sheet-body">
+      <span class="input-label">Cosa devi fare?</span>
+      <input type="text" class="task-input" id="task-input" placeholder="Es. Ripassare cap. 3…">
+      <span class="input-label">Collega a una nota (opzionale)</span>
+      <select class="link-select" id="task-link-select">
+        <option value="">Nessuna nota collegata</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ========== NOTE DETAIL SHEET ========== -->
+
+  <div class="sheet" id="sheet-detail">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <button class="sheet-close" onclick="closeAllSheets()">Chiudi</button>
+      <div class="sheet-title">&nbsp;</div>
+      <div style="width: 60px"></div>
+    </div>
+    <div class="sheet-body" id="detail-body"></div>
+  </div>
+
+  <!-- ========== INSTALL BANNER ========== -->
+
+  <div class="install-banner" id="install-banner">
+    <div class="install-banner-icon">📲</div>
+    <div class="install-banner-text">
+      <strong>Installa Second Brain</strong>
+      Safari → Condividi → "Aggiungi a Home"
+    </div>
+    <button class="install-banner-close" onclick="dismissInstall()">✕</button>
+  </div>
+
+  <!-- Toast -->
+
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// ============================================
+// DATA LAYER - localStorage persistence
+// ============================================
+
+const DB = {
+  notes: JSON.parse(localStorage.getItem('sb_notes') || '[]'),
+  voice: JSON.parse(localStorage.getItem('sb_voice') || '[]'),
+  journal: JSON.parse(localStorage.getItem('sb_journal') || '[]'),
+  tasks: JSON.parse(localStorage.getItem('sb_tasks') || '[]'),
+  moods: JSON.parse(localStorage.getItem('sb_moods') || '{}'),
+
+  save() {
+    localStorage.setItem('sb_notes', JSON.stringify(this.notes));
+    localStorage.setItem('sb_voice', JSON.stringify(this.voice));
+    localStorage.setItem('sb_journal', JSON.stringify(this.journal));
+    localStorage.setItem('sb_tasks', JSON.stringify(this.tasks));
+    localStorage.setItem('sb_moods', JSON.stringify(this.moods));
+  }
+};
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+function today() {
+  const d = new Date();
+  return d.toISOString().split('T')[0];
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = Math.floor((now - d) / 1000 / 60);
+  if (diff < 1) return 'Ora';
+  if (diff < 60) return `${diff} min fa`;
+  if (diff < 1440) return `${Math.floor(diff/60)}h fa`;
+  if (diff < 2880) return 'Ieri';
+  if (diff < 10080) return `${Math.floor(diff/1440)}gg fa`;
+  return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+}
+
+function formatFullDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('it-IT', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 6) return 'Notte fonda,';
+  if (h < 12) return 'Buongiorno,';
+  if (h < 18) return 'Buon pomeriggio,';
+  if (h < 22) return 'Buonasera,';
+  return 'Buonanotte,';
+}
+
+function moodEmoji(v) {
+  return ['😔', '😐', '🙂', '😊', '🤩'][v - 1] || '•';
+}
+
+function moodColor(v) {
+  const colors = {
+    1: 'linear-gradient(180deg, #4a4c58, #2a2c36)',
+    2: 'linear-gradient(180deg, rgba(143,160,184,0.35), rgba(143,160,184,0.15))',
+    3: 'linear-gradient(180deg, rgba(143,168,136,0.4), rgba(143,168,136,0.15))',
+    4: 'linear-gradient(180deg, rgba(212,182,132,0.6), rgba(212,182,132,0.25))',
+    5: 'linear-gradient(180deg, var(--accent2), var(--accent))'
+  };
+  return colors[v] || colors[2];
+}
+
+// ============================================
+// VIEW SWITCHING
+// ============================================
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelector(`.nav-item[data-view="${name}"]`).classList.add('active');
+  closeAllSheets();
+  if (name === 'home') renderHome();
+  if (name === 'notes') renderNotes();
+  if (name === 'voice') renderVoice();
+  if (name === 'journal') renderJournal();
+  if (name === 'tasks') renderTasks();
+}
+
+// ============================================
+// SHEETS
+// ============================================
+function showSheet(id) {
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById(id).classList.add('open');
+}
+
+function closeAllSheets() {
+  document.getElementById('overlay').classList.remove('show');
+  document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open'));
+  stopRecording(true);
+}
+
+// ============================================
+// MOOD TRACKING
+// ============================================
+document.querySelectorAll('#mood-emojis .mood-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const v = parseInt(btn.dataset.mood);
+    DB.moods[today()] = v;
+    DB.save();
+    document.querySelectorAll('#mood-emojis .mood-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    toast('Mood salvato ✦');
+  });
+});
+
+function updateMoodButtons() {
+  const v = DB.moods[today()];
+  document.querySelectorAll('#mood-emojis .mood-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.mood) === v);
+  });
+}
+
+function renderMoodChart() {
+  const bars = document.getElementById('mood-bars');
+  const now = new Date();
+  const days = ['D', 'L', 'M', 'M', 'G', 'V', 'S'];
+  let html = '';
+  // Get last 7 days starting from Monday
+  const start = new Date(now);
+  start.setDate(now.getDate() - 6);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const iso = d.toISOString().split('T')[0];
+    const mood = DB.moods[iso] || 0;
+    const height = mood ? (mood / 5) * 100 : 8;
+    const bg = mood ? moodColor(mood) : 'linear-gradient(180deg, #2a2c36, #1e2029)';
+    const dayLabel = days[d.getDay()];
+    html += `
+      <div class="mood-bar-col">
+        <div class="mood-bar" style="height:${height}%;background:${bg}"></div>
+        <div class="mood-bar-day">${dayLabel}</div>
+      </div>
+    `;
+  }
+  bars.innerHTML = html;
+}
+
+// ============================================
+// NOTES
+// ============================================
+let editingNoteId = null;
+
+function openNoteEditor(id = null) {
+  editingNoteId = id;
+  const titleInput = document.getElementById('note-title-input');
+  const bodyInput = document.getElementById('note-body-input');
+  if (id) {
+    const n = DB.notes.find(n => n.id === id);
+    titleInput.value = n.title || '';
+    bodyInput.value = n.body || '';
+    document.querySelector('#sheet-note .sheet-title').textContent = 'Modifica nota';
+  } else {
+    titleInput.value = '';
+    bodyInput.value = '';
+    document.querySelector('#sheet-note .sheet-title').textContent = 'Nuova nota';
+  }
+  showSheet('sheet-note');
+  setTimeout(() => titleInput.focus(), 300);
+}
+
+function saveNote() {
+  const title = document.getElementById('note-title-input').value.trim();
+  const body = document.getElementById('note-body-input').value.trim();
+  if (!title && !body) { closeAllSheets(); return; }
+
+  if (editingNoteId) {
+    const n = DB.notes.find(n => n.id === editingNoteId);
+    n.title = title || 'Senza titolo';
+    n.body = body;
+    n.updated = new Date().toISOString();
+  } else {
+    DB.notes.unshift({
+      id: uid(),
+      title: title || 'Senza titolo',
+      body,
+      created: new Date().toISOString(),
+      updated: new Date().toISOString()
+    });
+  }
+  DB.save();
+  closeAllSheets();
+  toast(editingNoteId ? 'Nota aggiornata' : 'Nota salvata ✦');
+  editingNoteId = null;
+  refreshAll();
+}
+
+function deleteNote(id) {
+  if (!confirm('Eliminare questa nota?')) return;
+  DB.notes = DB.notes.filter(n => n.id !== id);
+  // Also unlink tasks
+  DB.tasks.forEach(t => { if (t.linkedNoteId === id) t.linkedNoteId = null; });
+  DB.save();
+  closeAllSheets();
+  toast('Nota eliminata');
+  refreshAll();
+}
+
+function openNoteDetail(id) {
+  const n = DB.notes.find(n => n.id === id);
+  if (!n) return;
+  const body = document.getElementById('detail-body');
+  body.innerHTML = `
+    <div class="detail-title">${escapeHtml(n.title)}</div>
+    <div class="detail-meta">Creata ${formatFullDate(n.created)} · ${formatTime(n.created)}</div>
+    <div class="detail-body">${escapeHtml(n.body) || '<em style="color:var(--ink3)">Nessun contenuto</em>'}</div>
+    <div class="detail-actions">
+      <button class="btn-secondary" onclick="closeAllSheets(); setTimeout(() => openNoteEditor('${n.id}'), 300);">Modifica</button>
+      <button class="btn-secondary danger" onclick="deleteNote('${n.id}')">Elimina</button>
+    </div>
+  `;
+  showSheet('sheet-detail');
+}
+
+function renderNotes(filter = '') {
+  const list = document.getElementById('notes-list');
+  const q = filter.toLowerCase().trim();
+  let notes = DB.notes;
+  if (q) {
+    notes = notes.filter(n =>
+      (n.title || '').toLowerCase().includes(q) ||
+      (n.body || '').toLowerCase().includes(q)
+    );
+  }
+  document.getElementById('notes-count').textContent =
+    DB.notes.length === 0 ? 'Nessuna nota' :
+    q ? `${notes.length} risultati` :
+    `${DB.notes.length} not${DB.notes.length === 1 ? 'a' : 'e'} salvat${DB.notes.length === 1 ? 'a' : 'e'}`;
+
+  if (notes.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <div class="empty-state-title">${q ? 'Nessun risultato' : 'Nessuna nota ancora'}</div>
+        <div class="empty-state-text">${q ? 'Prova con un altro termine' : 'Tocca il + per scrivere la tua prima nota'}</div>
+      </div>
+    `;
+    return;
+  }
+  list.innerHTML = notes.map(n => {
+    let title = escapeHtml(n.title || 'Senza titolo');
+    let preview = escapeHtml((n.body || '').slice(0, 120));
+    if (q) {
+      title = highlight(title, q);
+      preview = highlight(preview, q);
+    }
+    return `
+      <div class="note-row" onclick="openNoteDetail('${n.id}')">
+        <div class="note-row-type">📝</div>
+        <div class="note-row-body">
+          <div class="note-row-title">${title}</div>
+          <div class="note-row-preview">${preview || '<em>Vuota</em>'}</div>
+          <div class="note-row-date">${formatDate(n.updated || n.created)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function highlight(text, q) {
+  const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  return text.replace(re, '<mark>$1</mark>');
+}
+
+document.getElementById('search-input').addEventListener('input', e => {
+  renderNotes(e.target.value);
+});
+
+// ============================================
+// VOICE MEMOS with Web Speech API
+// ============================================
+let recognition = null;
+let isRecording = false;
+let recordStartTime = null;
+let recordTimer = null;
+let currentTranscript = '';
+
+function initSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = 'it-IT';
+  r.continuous = true;
+  r.interimResults = true;
+  return r;
+}
+
+function openVoiceRecorder() {
+  currentTranscript = '';
+  document.getElementById('transcript-box').innerHTML = 'La trascrizione apparirà qui…';
+  document.getElementById('transcript-box').classList.add('empty');
+  document.getElementById('recorder-time').textContent = '00:00';
+  document.getElementById('recorder-status').textContent = 'Tocca per iniziare';
+  document.getElementById('recorder-hint').textContent = 'Trascrizione in italiano';
+  document.getElementById('record-btn').classList.remove('recording');
+  document.getElementById('record-icon').textContent = '🎙️';
+  document.getElementById('voice-save-btn').style.opacity = '0.4';
+  showSheet('sheet-voice');
+}
+
+function toggleRecording() {
+  if (isRecording) stopRecording(false);
+  else startRecording();
+}
+
+function startRecording() {
+  recognition = initSpeechRecognition();
+  if (!recognition) {
+    toast('Il tuo browser non supporta la trascrizione vocale');
+    document.getElementById('recorder-hint').textContent = 'Usa Safari iOS 14.5+ o Chrome';
+    return;
+  }
+
+  currentTranscript = '';
+  let finalTranscript = '';
+
+  recognition.onresult = (event) => {
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const t = event.results[i][0].transcript;
+      if (event.results[i].isFinal) finalTranscript += t + ' ';
+      else interim += t;
+    }
+    currentTranscript = finalTranscript;
+    const box = document.getElementById('transcript-box');
+    box.classList.remove('empty');
+    box.innerHTML = escapeHtml(finalTranscript) + '<span style="color:var(--ink3)">' + escapeHtml(interim) + '</span>';
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error === 'not-allowed') {
+      toast('Permesso microfono negato');
+      document.getElementById('recorder-hint').textContent = 'Abilita il microfono nelle impostazioni';
+    }
+    stopRecording(false);
+  };
+
+  recognition.onend = () => {
+    if (isRecording) {
+      // Auto-restart if still recording (iOS Safari stops after silence)
+      try { recognition.start(); } catch(e) {}
+    }
+  };
+
+  try {
+    recognition.start();
+    isRecording = true;
+    recordStartTime = Date.now();
+    document.getElementById('record-btn').classList.add('recording');
+    document.getElementById('record-icon').textContent = '⏹';
+    document.getElementById('recorder-status').textContent = 'Sto ascoltando…';
+    document.getElementById('recorder-hint').textContent = 'Tocca di nuovo per fermare';
+    updateTimer();
+    recordTimer = setInterval(updateTimer, 500);
+  } catch(e) {
+    toast('Errore avvio registrazione');
+  }
+}
+
+function stopRecording(silent) {
+  if (recognition) {
+    try { recognition.stop(); } catch(e) {}
+    recognition = null;
+  }
+  isRecording = false;
+  clearInterval(recordTimer);
+  document.getElementById('record-btn').classList.remove('recording');
+  document.getElementById('record-icon').textContent = '🎙️';
+  if (!silent) {
+    if (currentTranscript.trim()) {
+      document.getElementById('recorder-status').textContent = 'Trascrizione pronta';
+      document.getElementById('recorder-hint').textContent = 'Rivedi e salva';
+      document.getElementById('voice-save-btn').style.opacity = '1';
+    } else {
+      document.getElementById('recorder-status').textContent = 'Nessuna trascrizione';
+      document.getElementById('recorder-hint').textContent = 'Prova a riavviare';
+    }
+  }
+}
+
+function updateTimer() {
+  if (!recordStartTime) return;
+  const sec = Math.floor((Date.now() - recordStartTime) / 1000);
+  const m = String(Math.floor(sec / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  document.getElementById('recorder-time').textContent = `${m}:${s}`;
+}
+
+function cancelVoiceRecording() {
+  stopRecording(true);
+  closeAllSheets();
+}
+
+function saveVoiceMemo() {
+  const text = currentTranscript.trim();
+  if (!text) { toast('Registra qualcosa prima di salvare'); return; }
+  stopRecording(true);
+  const title = text.split(/[.!?]/)[0].slice(0, 50) || 'Memo vocale';
+  DB.voice.unshift({
+    id: uid(),
+    title,
+    body: text,
+    created: new Date().toISOString(),
+    duration: Math.floor((Date.now() - (recordStartTime || Date.now())) / 1000)
+  });
+  DB.save();
+  closeAllSheets();
+  toast('Memo vocale salvato ✦');
+  refreshAll();
+}
+
+function renderVoice() {
+  const list = document.getElementById('voice-list');
+  document.getElementById('voice-count').textContent =
+    DB.voice.length === 0 ? 'Nessun memo ancora' :
+    `${DB.voice.length} memo`;
+
+  if (DB.voice.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🎙️</div>
+        <div class="empty-state-title">Nessun memo ancora</div>
+        <div class="empty-state-text">Tocca il pulsante per registrare la tua voce.<br>La trascrizione è automatica in italiano.</div>
+      </div>
+    `;
+    return;
+  }
+  list.innerHTML = DB.voice.map(v => `
+    <div class="note-row" onclick="openVoiceDetail('${v.id}')">
+      <div class="note-row-type" style="background: rgba(200,139,139,0.1)">🎙️</div>
+      <div class="note-row-body">
+        <div class="note-row-title">${escapeHtml(v.title)}</div>
+        <div class="note-row-preview">${escapeHtml(v.body.slice(0, 120))}</div>
+        <div class="note-row-date">${formatDate(v.created)} ${v.duration ? '· ' + Math.floor(v.duration/60) + ':' + String(v.duration%60).padStart(2,'0') : ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openVoiceDetail(id) {
+  const v = DB.voice.find(x => x.id === id);
+  if (!v) return;
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-title">${escapeHtml(v.title)}</div>
+    <div class="detail-meta">🎙️ ${formatFullDate(v.created)} · ${formatTime(v.created)}</div>
+    <div class="detail-body">${escapeHtml(v.body)}</div>
+    <div class="detail-actions">
+      <button class="btn-secondary" onclick="convertVoiceToNote('${v.id}')">Converti in nota</button>
+      <button class="btn-secondary danger" onclick="deleteVoice('${v.id}')">Elimina</button>
+    </div>
+  `;
+  showSheet('sheet-detail');
+}
+
+function deleteVoice(id) {
+  if (!confirm('Eliminare questo memo?')) return;
+  DB.voice = DB.voice.filter(v => v.id !== id);
+  DB.save();
+  closeAllSheets();
+  toast('Memo eliminato');
+  refreshAll();
+}
+
+function convertVoiceToNote(id) {
+  const v = DB.voice.find(x => x.id === id);
+  if (!v) return;
+  DB.notes.unshift({
+    id: uid(),
+    title: v.title,
+    body: v.body,
+    created: new Date().toISOString(),
+    updated: new Date().toISOString()
+  });
+  DB.save();
+  closeAllSheets();
+  toast('Convertito in nota ✦');
+  refreshAll();
+}
+
+// ============================================
+// JOURNAL
+// ============================================
+let journalMood = null;
+
+document.querySelectorAll('#journal-mood-emojis .mood-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    journalMood = parseInt(btn.dataset.mood);
+    document.querySelectorAll('#journal-mood-emojis .mood-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+});
+
+function openJournalEditor() {
+  journalMood = DB.moods[today()] || null;
+  document.getElementById('journal-body-input').value = '';
+  document.querySelectorAll('#journal-mood-emojis .mood-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.mood) === journalMood);
+  });
+  showSheet('sheet-journal');
+  setTimeout(() => document.getElementById('journal-body-input').focus(), 300);
+}
+
+function saveJournal() {
+  const body = document.getElementById('journal-body-input').value.trim();
+  if (!body) { toast('Scrivi qualcosa prima di salvare'); return; }
+  DB.journal.unshift({
+    id: uid(),
+    body,
+    mood: journalMood,
+    created: new Date().toISOString()
+  });
+  if (journalMood) {
+    DB.moods[today()] = journalMood;
+  }
+  DB.save();
+  closeAllSheets();
+  toast('Entry salvata ✦');
+  refreshAll();
+}
+
+function deleteJournal(id) {
+  if (!confirm('Eliminare questa entry?')) return;
+  DB.journal = DB.journal.filter(j => j.id !== id);
+  DB.save();
+  closeAllSheets();
+  toast('Entry eliminata');
+  refreshAll();
+}
+
+function openJournalDetail(id) {
+  const j = DB.journal.find(x => x.id === id);
+  if (!j) return;
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-title">${formatFullDate(j.created)}</div>
+    <div class="detail-meta">${formatTime(j.created)} ${j.mood ? '· ' + moodEmoji(j.mood) : ''}</div>
+    <div class="detail-body">${escapeHtml(j.body)}</div>
+    <div class="detail-actions">
+      <button class="btn-secondary danger" onclick="deleteJournal('${j.id}')">Elimina</button>
+    </div>
+  `;
+  showSheet('sheet-detail');
+}
+
+function renderJournal() {
+  renderMoodChart();
+  const list = document.getElementById('journal-list');
+  document.getElementById('journal-count').textContent =
+    DB.journal.length === 0 ? 'Inizia oggi' :
+    `${DB.journal.length} entry`;
+
+  if (DB.journal.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📔</div>
+        <div class="empty-state-title">Inizia il tuo journal</div>
+        <div class="empty-state-text">Scrivi una riga al giorno sul tuo umore, pensieri, idee.</div>
+      </div>
+    `;
+    return;
+  }
+  list.innerHTML = DB.journal.map(j => `
+    <div class="journal-entry-card" onclick="openJournalDetail('${j.id}')">
+      <div class="journal-entry-header">
+        <div>
+          <div class="journal-entry-date">${formatFullDate(j.created).charAt(0).toUpperCase() + formatFullDate(j.created).slice(1)}</div>
+          <div class="journal-entry-time">Scritto alle ${formatTime(j.created)}</div>
+        </div>
+        ${j.mood ? `<div class="journal-entry-mood">${moodEmoji(j.mood)}</div>` : ''}
+      </div>
+      <div class="journal-entry-body">${escapeHtml(j.body.slice(0, 200))}${j.body.length > 200 ? '…' : ''}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================
+// TASKS
+// ============================================
+function openTaskEditor() {
+  document.getElementById('task-input').value = '';
+  const select = document.getElementById('task-link-select');
+  select.innerHTML = '<option value="">Nessuna nota collegata</option>' +
+    DB.notes.map(n => `<option value="${n.id}">📝 ${escapeHtml(n.title)}</option>`).join('') +
+    DB.voice.map(v => `<option value="v_${v.id}">🎙️ ${escapeHtml(v.title)}</option>`).join('');
+  showSheet('sheet-task');
+  setTimeout(() => document.getElementById('task-input').focus(), 300);
+}
+
+function saveTask() {
+  const text = document.getElementById('task-input').value.trim();
+  if (!text) { toast('Scrivi un task'); return; }
+  const linked = document.getElementById('task-link-select').value;
+  DB.tasks.unshift({
+    id: uid(),
+    text,
+    linkedNoteId: linked || null,
+    done: false,
+    created: new Date().toISOString()
+  });
+  DB.save();
+  closeAllSheets();
+  toast('Task aggiunto ✦');
+  refreshAll();
+}
+
+function toggleTask(id) {
+  const t = DB.tasks.find(t => t.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  t.completedAt = t.done ? new Date().toISOString() : null;
+  DB.save();
+  refreshAll();
+}
+
+function deleteTask(id, evt) {
+  if (evt) evt.stopPropagation();
+  DB.tasks = DB.tasks.filter(t => t.id !== id);
+  DB.save();
+  refreshAll();
+}
+
+function getLinkedLabel(linkedId) {
+  if (!linkedId) return null;
+  if (linkedId.startsWith('v_')) {
+    const v = DB.voice.find(x => x.id === linkedId.slice(2));
+    return v ? '🎙️ ' + v.title.slice(0, 15) : null;
+  }
+  const n = DB.notes.find(x => x.id === linkedId);
+  return n ? '📝 ' + n.title.slice(0, 15) : null;
+}
+
+function renderTasks() {
+  const list = document.getElementById('tasks-list');
+  const open = DB.tasks.filter(t => !t.done);
+  const done = DB.tasks.filter(t => t.done);
+  document.getElementById('tasks-count').textContent =
+    DB.tasks.length === 0 ? 'Nessun task' :
+    `${open.length} aperto · ${done.length} completato`;
+
+  if (DB.tasks.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">☑️</div>
+        <div class="empty-state-title">Tutto fatto!</div>
+        <div class="empty-state-text">Nessun task. Aggiungine uno per iniziare.</div>
+      </div>
+    `;
+    return;
+  }
+  const renderItem = t => {
+    const linked = getLinkedLabel(t.linkedNoteId);
+    return `
+      <div class="task-item" onclick="toggleTask('${t.id}')">
+        <div class="task-check ${t.done ? 'done' : ''}">${t.done ? '✓' : ''}</div>
+        <div class="task-text ${t.done ? 'done' : ''}">${escapeHtml(t.text)}</div>
+        ${linked ? `<div class="task-link">${escapeHtml(linked)}</div>` : ''}
+        <button class="task-delete" onclick="deleteTask('${t.id}', event)">×</button>
+      </div>
+    `;
+  };
+  let html = open.map(renderItem).join('');
+  if (done.length) {
+    html += `<div class="section-title" style="padding: 20px 0 12px 0;">Completati</div>`;
+    html += done.map(renderItem).join('');
+  }
+  list.innerHTML = html;
+}
+
+// ============================================
+// HOME RENDERING
+// ============================================
+function renderHome() {
+  document.getElementById('greeting').innerHTML = `${getGreeting()}<br><em>come stai oggi?</em>`;
+  const openTasks = DB.tasks.filter(t => !t.done).length;
+  document.getElementById('home-stats').textContent =
+    `${DB.notes.length} not${DB.notes.length === 1 ? 'a' : 'e'} · ${openTasks} task apert${openTasks === 1 ? 'o' : 'i'}`;
+
+  updateMoodButtons();
+
+  // Recent 3 notes
+  const recent = document.getElementById('home-recent-notes');
+  const items = [
+    ...DB.notes.map(n => ({...n, type: 'note'})),
+    ...DB.voice.map(v => ({...v, type: 'voice'}))
+  ].sort((a,b) => new Date(b.created) - new Date(a.created)).slice(0, 3);
+
+  if (items.length === 0) {
+    recent.innerHTML = `<div style="color: var(--ink3); font-size: 13px; padding: 16px 0;">Nessuna nota ancora. Inizia a scrivere ✦</div>`;
+  } else {
+    recent.innerHTML = items.map(i => `
+      <div class="note-row" style="margin-bottom: 8px;" onclick="${i.type === 'voice' ? `openVoiceDetail('${i.id}')` : `openNoteDetail('${i.id}')`}">
+        <div class="note-row-type" style="${i.type === 'voice' ? 'background: rgba(200,139,139,0.1)' : ''}">${i.type === 'voice' ? '🎙️' : '📝'}</div>
+        <div class="note-row-body">
+          <div class="note-row-title">${escapeHtml(i.title)}</div>
+          <div class="note-row-preview">${escapeHtml((i.body || '').slice(0, 80))}</div>
+          <div class="note-row-date">${formatDate(i.created)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Open tasks on home (max 4)
+  const tasksDiv = document.getElementById('home-tasks');
+  const open = DB.tasks.filter(t => !t.done).slice(0, 4);
+  if (open.length === 0) {
+    tasksDiv.innerHTML = `<div style="color: var(--ink3); font-size: 13px; padding: 0 22px;">Nessun task aperto ✦</div>`;
+  } else {
+    tasksDiv.innerHTML = `
+      <div class="task-list">
+        ${open.map(t => {
+          const linked = getLinkedLabel(t.linkedNoteId);
+          return `
+            <div class="task-item" onclick="toggleTask('${t.id}')">
+              <div class="task-check ${t.done ? 'done' : ''}">${t.done ? '✓' : ''}</div>
+              <div class="task-text ${t.done ? 'done' : ''}">${escapeHtml(t.text)}</div>
+              ${linked ? `<div class="task-link">${escapeHtml(linked)}</div>` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+}
+
+// ============================================
+// UTILITIES
+// ============================================
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function refreshAll() {
+  renderHome();
+  renderNotes(document.getElementById('search-input').value);
+  renderVoice();
+  renderJournal();
+  renderTasks();
+}
+
+// ============================================
+// INSTALL PROMPT (iOS)
+// ============================================
+function dismissInstall() {
+  localStorage.setItem('sb_install_dismissed', '1');
+  document.getElementById('install-banner').classList.remove('show');
+}
+
+function maybeShowInstallBanner() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  const dismissed = localStorage.getItem('sb_install_dismissed');
+  if (isIOS && !isStandalone && !dismissed) {
+    setTimeout(() => {
+      document.getElementById('install-banner').classList.add('show');
+    }, 3000);
+  }
+}
+
+// ============================================
+// INIT
+// ============================================
+window.addEventListener('load', () => {
+  refreshAll();
+  maybeShowInstallBanner();
+});
+
+// Prevent iOS bounce scroll on body
+document.addEventListener('touchmove', (e) => {
+  if (e.target.closest('.scroll-content, .sheet-body, textarea, input')) return;
+  e.preventDefault();
+}, { passive: false });
+
+// Close sheets on Escape (for testing on desktop)
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAllSheets();
+});
+</script>
+
+</body>
+</html>
