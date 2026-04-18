@@ -137,69 +137,71 @@ position: fixed;
 bottom: 0; left: 0; right: 0;
 height: calc(70px + max(var(–safe-bottom), 20px));
 padding-bottom: max(var(–safe-bottom), 20px);
-background: #2a2d3a;
-border-top: 1px solid var(–border-light);
+background: linear-gradient(180deg, #f5f1e8 0%, #ebe4d3 100%);
+border-top: 1px solid rgba(240,205,143,0.4);
 display: flex;
 align-items: flex-start;
-padding-top: 8px;
+padding-top: 10px;
 justify-content: space-around;
 padding-left: 8px; padding-right: 8px;
 z-index: 50;
-box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+box-shadow:
+0 -1px 0 rgba(255,255,255,0.6) inset,
+0 -8px 24px rgba(0,0,0,0.5),
+0 -2px 8px rgba(240,205,143,0.2);
 }
 .bottom-nav::before {
 content: ‘’;
 position: absolute;
 top: 0; left: 0; right: 0; height: 1px;
-background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
 }
 
 .nav-item {
 display: flex;
 flex-direction: column;
 align-items: center;
-gap: 5px;
+gap: 4px;
 cursor: pointer;
-padding: 10px 14px;
+padding: 6px 12px;
 border-radius: var(–r-sm);
 transition: transform 0.15s;
 position: relative;
-min-width: 60px;
+min-width: 58px;
 }
 .nav-item:active { transform: scale(0.92); }
 .nav-item .nav-icon {
 font-size: 24px;
 line-height: 1;
-opacity: 0.75;
+opacity: 0.65;
 transition: all 0.2s;
-filter: grayscale(0.2);
+filter: grayscale(0.3);
 }
 .nav-item .nav-label {
 font-size: 11px;
-color: var(–ink2);
+color: #5a4a2a;
 font-weight: 500;
-transition: color 0.2s;
+transition: all 0.2s;
 letter-spacing: 0.1px;
 }
 .nav-item.active .nav-icon {
 opacity: 1;
 filter: none;
-transform: translateY(-2px);
+transform: translateY(-1px);
 }
 .nav-item.active .nav-label {
-color: var(–accent);
-font-weight: 600;
+color: #8a6a20;
+font-weight: 700;
 }
 .nav-item.active::after {
 content: ‘’;
 position: absolute;
-top: 4px;
+top: -10px;
 left: 50%;
 transform: translateX(-50%);
-width: 28px; height: 3px;
-background: var(–accent);
+width: 32px; height: 3px;
+background: linear-gradient(90deg, transparent, #b88a2a, transparent);
 border-radius: 3px;
-box-shadow: 0 0 12px var(–accent-glow);
 }
 
 /* ===== FAB ===== */
